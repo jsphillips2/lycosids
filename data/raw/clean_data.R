@@ -4,11 +4,10 @@
 
 # load packages
 library(tidyverse)
-library(readxl)
 library(lubridate)
 
 # set import path
-import <- "data/raw/MASTER_LTREB_2013-2018_13Sep18.xlsx"
+pitfall_raw <- read_csv("data/raw/pitfall.csv")
 
 # examine sheets
 sheets <- excel_sheets(import)
@@ -32,7 +31,7 @@ theme_set(theme_bw() %+replace%
 #==========
 
 # read data
-pitfall <- read_excel(import, sheet = "Pitfall", na=c("","NA")) %>%
+pitfall <- pitfall_raw %>%
   mutate(setdate = ymd(setdate),
          coldate = ymd(coldate),
          year = year(coldate),
@@ -67,42 +66,9 @@ pitfall %>%
   geom_point()
 
 
-library(mgcv)
 
 adulst2 <- adults %>% 
   filter(species != "unid") %>%
   mutate(sex_spp = factor(paste0(sex, "_", species)),
          species = factor(species))
                             
-m <- gam(count ~ 
-           s(yday, by = species, k = 6) + s(yday, by = sex_spp, k = 6) + 
-           s(year, by = species, k = 4) + s(year, by = sex_spp, k =4) + 
-           species + sex + daysout,
-          data = adulst2, 
-         family = "poisson")
-anova(m)
-nd_y <- adulst2 %>%
-  expand(nesting(species,sex,sex_spp), year, yday = mean(yday), daysout = mean(daysout))
-nd_y$count <- predict(m, newdata = nd_y, type = "response")
-
-nd_y %>%
-  ggplot(aes(year, count, color = sex))+
-  facet_wrap(~species)+
-  scale_y_continuous(trans = "log1p")+
-  geom_jitter(data = adulst2, width = 0.1, alpha = 0.5, size = 1)+
-  geom_line(size = 0.8)
-
-
-nd_d <- adulst2 %>%
-  expand(nesting(species,sex,sex_spp), year = 2015, yday = seq(min(yday), max(yday), 5), 
-         daysout = mean(daysout))
-nd_d$count <- predict(m, newdata = nd_d, type = "response")
-
-nd_d %>%
-  ggplot(aes(yday, count, color = sex))+
-  facet_wrap(~species)+
-  scale_y_continuous(trans = "log1p")+
-  # geom_point(data = adulst2, alpha = 0.5, size = 1)+
-  geom_line(size = 0.8)
-
-
