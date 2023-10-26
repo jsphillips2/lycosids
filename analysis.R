@@ -88,16 +88,19 @@ adults_wide <- adults_clean %>%
 #=========================================================================================
 #========== Fit model 
 #=========================================================================================
-
-model <- brm(mvbind(pal, sph, hyp) ~ 
-               sex + year + yday + dist + 
-               (1 | p | trans) + (1 | q | plot) +
-             ar(time = time, gr = ar_gr, p = 1, cov = FALSE),
-             family = "gaussian",
-             data = adults_wide,
-             iter = 1000,
-             chains = 4,
-             cores = 4)
+# start_time <- Sys.time()
+# model <- brm(mvbind(pal, sph, hyp) ~
+#                sex + year + yday + dist +
+#                (1 | p | trans) + (1 | q | plot) +
+#                ar(time = time, gr = ar_gr, p = 1, cov = FALSE),
+#              family = "gaussian",
+#              data = adults_wide,
+#              iter = 4000,
+#              chains = 4,
+#              cores = 4,
+#              control = list(adapt_delta=0.95))
+# end_time <- Sys.time()
+# end_time - start_time
 # write_rds(model,"model_fit.rds")
 # model <- read_rds("model_fit.rds")
 
@@ -110,131 +113,45 @@ summary(model, prob = 0.68)
 
 
 
+
+
+
+
+
 #=========================================================================================
 #========== Plot
 #=========================================================================================
 
 trans_data <- adults_clean %>%
   mutate(distance = dist * sd(adults$dist) + mean(adults$dist)) %>%
-  group_by(trans, plot, dist,distance, species) %>%
+  group_by(trans, plot, dist,distance, species, year) %>%
   summarize(y = mean(y)) %>%
   pivot_wider(names_from = species, values_from = y) %>%
   ungroup()
 
 ggplot(data = trans_data,
-       aes(x = hyp, 
+       aes(x = pal, 
            y = sph, 
-           color = trans))+
-  geom_point(aes(size = distance))+
-  scale_color_manual(guide = "none",
-                     values = c("firebrick","dodgerblue","gray50",
-                                "magenta2","darkorange","darkgreen","goldenrod4"))
+           color = year,
+           shape = trans))+
+  geom_point(size = 5)+
+  scale_shape_manual(values = c(16, 17, 15, 3, 7, 8, 4))
 
 ggplot(data = trans_data,
-       aes(x = hyp, 
-           y = pal, 
-           color = trans, 
-           size = distance))+
-  geom_point()+
-  scale_color_manual(guide = "none",
-                     values = c("firebrick","dodgerblue","gray50",
-                                "magenta2","darkorange","darkgreen","goldenrod4"))
-  
+       aes(x = pal, 
+           y = hyp, 
+           color = year,
+           shape = trans))+
+  geom_point(size = 5)+
+  scale_shape_manual(values = c(16, 17, 15, 3, 7, 8, 4))
 
 ggplot(data = trans_data,
        aes(x = sph, 
-           y = pal, 
-           color = trans, 
-           size = distance))+
-  geom_point()
+           y = hyp, 
+           color = year,
+           shape = trans))+
+  geom_point(size = 5)+
+  scale_shape_manual(values = c(16, 17, 15, 3, 7, 8, 4))
 
 
-year_data <- adults_clean %>%
-  mutate(distance = dist * sd(adults$dist) + mean(adults$dist)) %>%
-  group_by(year, plot, trans, distance, species) %>%
-  summarize(y = mean(y))
-
-
-ggplot(data = year_data,
-       aes(x = year,
-           y = y))+
-  facet_wrap(~species, nrow = 3)+
-  geom_line(aes(group = plot),
-            alpha = 0.5,
-            size = 0.3)
-
-
-
-season_data <- adults_clean %>%
-  mutate(distance = dist * sd(adults$dist) + mean(adults$dist)) %>%
-  group_by(yday, plot, trans, distance, species) %>%
-  summarize(y = mean(y))
-
-
-
-ggplot(data = season_data,
-       aes(x = yday,
-           y = y))+
-  facet_wrap(~species, nrow = 3)+
-  geom_line(aes(group = plot),
-            alpha = 0.5,
-            size = 0.3)
-
-
-
-season_data <- adults_clean %>%
-  mutate(distance = dist * sd(adults$dist) + mean(adults$dist)) %>%
-  group_by(plot, trans, distance, species) %>%
-  summarize(y = mean(y))
-
-
-
-ggplot(data = season_data,
-       aes(x = distance,
-           y = y))+
-  facet_wrap(~species, nrow = 3)+
-  geom_point()
-
-
-#=========================================================================================
-
-
-
-
-
-#=========================================================================================
-#========== Direct correlations
-#=========================================================================================
-
-adults_clean %>%
-  group_by(trans, species) %>%
-  summarize(y = mean(y)) %>%
-  pivot_wider(names_from = species, values_from = y) %>%
-  ungroup() %>%
-  select(-trans) %>%
-  cor()
-
-adults_clean %>%
-  group_by(plot, species) %>%
-  summarize(y = mean(y)) %>%
-  pivot_wider(names_from = species, values_from = y) %>%
-  ungroup() %>%
-  select(-plot) %>%
-  cor()
-
-adults_clean %>%
-  group_by(year, species) %>%
-  summarize(y = mean(y)) %>%
-  pivot_wider(names_from = species, values_from = y) %>%
-  ungroup() %>%
-  select(-year) %>%
-  cor()
-
-adults_clean %>%
-  group_by(yday, species) %>%
-  summarize(y = mean(y)) %>%
-  pivot_wider(names_from = species, values_from = y) %>%
-  ungroup() %>%
-  select(-yday) %>%
-  cor()
 
