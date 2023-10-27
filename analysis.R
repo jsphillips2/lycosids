@@ -66,7 +66,7 @@ adults_clean <- adults %>%
   mutate(catch_rate = log(count + 1) / daysout,
          plot = factor(paste(trans,dist)),
          time = as.numeric(coldate) - min(as.numeric(coldate)),
-         y = (catch_rate - mean(catch_rate)) / sd(catch_rate),
+         y = (catch_rate - min(catch_rate)) / sd(catch_rate),
          yday = (yday - mean(yday)) / sd(yday),
          year = (year - mean(year)) / sd(year),
          dist = (dist - mean(dist)) / sd(dist)
@@ -134,7 +134,7 @@ ggplot(data = trans_data,
            y = sph, 
            color = year,
            shape = trans))+
-  geom_point(size = 5)+
+  geom_point(size = 3)+
   scale_shape_manual(values = c(16, 17, 15, 3, 7, 8, 4))
 
 ggplot(data = trans_data,
@@ -142,7 +142,7 @@ ggplot(data = trans_data,
            y = hyp, 
            color = year,
            shape = trans))+
-  geom_point(size = 5)+
+  geom_point(size = 3)+
   scale_shape_manual(values = c(16, 17, 15, 3, 7, 8, 4))
 
 ggplot(data = trans_data,
@@ -150,8 +150,33 @@ ggplot(data = trans_data,
            y = hyp, 
            color = year,
            shape = trans))+
-  geom_point(size = 5)+
+  geom_point(size = 3)+
   scale_shape_manual(values = c(16, 17, 15, 3, 7, 8, 4))
 
 
+
+
+ggplot(data = trans_data %>%
+         pivot_longer(cols = c("hyp","pal","sph")),
+       aes(x = year, 
+           y = value, 
+           color = trans,
+           group = plot))+
+  facet_wrap(~name, nrow = 3)+
+  geom_line()
+
+
+ggplot(data = adults_clean %>%
+         mutate(distance = dist * sd(adults$dist) + mean(adults$dist)) %>%
+         group_by(trans, plot, dist,distance, species, yday) %>%
+         summarize(y = mean(catch_rate)) %>%
+         pivot_wider(names_from = species, values_from = y) %>%
+         ungroup() %>%
+         pivot_longer(cols = c("hyp","pal","sph")),
+       aes(x = yday, 
+           y = value, 
+           color = trans,
+           group = plot))+
+  facet_wrap(~name, nrow = 3)+
+  geom_line()
 
