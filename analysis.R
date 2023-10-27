@@ -98,7 +98,7 @@ adults_wide <- adults_clean %>%
 #              iter = 4000,
 #              chains = 4,
 #              cores = 4,
-#              control = list(adapt_delta=0.95))
+#              control = list(adapt_delta=0.99))
 # end_time <- Sys.time()
 # end_time - start_time
 # write_rds(model,"model_fit.rds")
