@@ -39,3 +39,4 @@ rsconnect/
 # Other
 *.xlsx
 *.DS_Store
+*.RProj
